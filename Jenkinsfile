@@ -15,43 +15,36 @@ pipeline {
             }
         }
 
-        stage('Setup Python Env') {
-            steps {
-                sh '''
-                cd $WORKSPACE
-                python3 -m venv .venv
-                . .venv/bin/activate
-                pip install --upgrade pip
-                pip install mlflow scikit-learn
-                mkdir -p mlruns
-                nohup mlflow server --backend-store-uri ./mlruns \
-                    --default-artifact-root ./mlruns \
-                    --host 127.0.0.1 --port 5000 > mlflow.log 2>&1 &
-                sleep 5
-                '''
-            }
-        }
-
-        stage('Run MLflow Experiment') {
-            steps {
-                sh '''
-                cd $WORKSPACE
-                . .venv/bin/activate
-                python3 mlflow_exp.py
-                '''
-            }
-        }
-
-        stage('Deploy to Minikube') {
-            steps {
-                sh '''
-                cd $WORKSPACE
-                kubectl apply -f k8s-deploy.yml
-                kubectl get pods
-                '''
-            }
-        }
+stage('Setup Python Env') {
+    steps {
+        sh '''
+        python3 -m venv .venv
+        . .venv/bin/activate
+        pip install mlflow scikit-learn
+        mkdir -p mlruns
+        nohup mlflow server --backend-store-uri ./mlruns --default-artifact-root ./mlruns --host 127.0.0.1 --port 5000 > mlflow.log 2>&1 &
+        '''
     }
+}
+
+stage('Run MLflow Experiment') {
+    steps {
+        sh '''
+        . .venv/bin/activate
+        python3 mlflow_exp.py
+        '''
+    }
+}
+
+stage('Deploy to Minikube') {
+    steps {
+        sh '''
+        kubectl apply -f k8s-deploy.yml
+        kubectl get pods
+        '''
+    }
+}
+
 
     post {
         success {
