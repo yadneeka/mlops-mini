@@ -1,5 +1,4 @@
 pipeline {
-    pipeline {
     agent { label 'wsl' }
 
     environment {
@@ -16,10 +15,10 @@ pipeline {
         stage('Setup Python Env') {
             steps {
                 sh '''
-                python3 -m venv .venv
-                . .venv/bin/activate
+                python3 -m venv venv
+                . venv/bin/activate
                 pip install --upgrade pip
-                pip install -r requirements.txt
+                pip install mlflow scikit-learn
                 '''
             }
         }
@@ -27,8 +26,7 @@ pipeline {
         stage('Run MLflow Experiment') {
             steps {
                 sh '''
-                . .venv/bin/activate
-                export MLFLOW_TRACKING_URI=${MLFLOW_TRACKING_URI}
+                . venv/bin/activate
                 python3 mlflow_exp.py
                 '''
             }
@@ -37,7 +35,7 @@ pipeline {
         stage('Deploy to Minikube') {
             steps {
                 sh '''
-                echo "Deploying to Minikube..."
+                echo "Applying K8s manifest to Minikube..."
                 kubectl apply -f k8s-deploy.yml
                 kubectl get pods
                 '''
@@ -47,7 +45,7 @@ pipeline {
 
     post {
         success {
-            echo '✅ Pipeline completed successfully!'
+            echo '✅ Pipeline executed successfully!'
         }
         failure {
             echo '❌ Pipeline failed!'
