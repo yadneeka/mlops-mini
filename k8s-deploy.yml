@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: ml-mini-app
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: ml-mini
+  template:
+    metadata:
+      labels:
+        app: ml-mini
+    spec:
+      containers:
+        - name: ml-mini
+          image: nginx:latest
+          ports:
+            - containerPort: 80
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: ml-mini-svc
+spec:
+  selector:
+    app: ml-mini
+  ports:
+    - port: 80
+      targetPort: 80
+  type: NodePort

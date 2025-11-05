@@ -1,0 +1,8 @@
+---
+- name: Simple Ansible playbook to simulate deployment
+  hosts: localhost
+  connection: local
+  tasks:
+    - name: Print deployment status
+      debug:
+        msg: "Model deployed successfully using Ansible!"
