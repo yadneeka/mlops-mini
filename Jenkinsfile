@@ -2,27 +2,25 @@ pipeline {
     agent { label 'wsl' }
 
     environment {
-        MLFLOW_TRACKING_URI = "http://127.0.0.1:5000"
+        MLFLOW_TRACKING_URI = 'http://127.0.0.1:5000'
     }
 
-    stage('Checkout Code') {
-    steps {
-        git branch: 'main',
-            url: 'https://github.com/yadneeka/mlops-mini.git',
-            changelog: false,
-            poll: false,
-            gitTool: 'linux-git'
-    }
-}
-
+    stages {
+        stage('Checkout Code') {
+            steps {
+                git branch: 'main', url: 'https://github.com/yadneeka/mlops-mini.git'
+            }
+        }
 
         stage('Setup Python Env') {
             steps {
                 sh '''
-                python3 -m venv venv
-                . venv/bin/activate
-                pip install --upgrade pip
+                cd ~/mlops-mini
+                python3 -m venv .venv
+                . .venv/bin/activate
                 pip install mlflow scikit-learn
+                mkdir -p mlruns
+                nohup mlflow server --backend-store-uri ./mlruns --default-artifact-root ./mlruns --host 127.0.0.1 --port 5000 > mlflow.log 2>&1 &
                 '''
             }
         }
@@ -30,7 +28,8 @@ pipeline {
         stage('Run MLflow Experiment') {
             steps {
                 sh '''
-                . venv/bin/activate
+                cd ~/mlops-mini
+                . .venv/bin/activate
                 python3 mlflow_exp.py
                 '''
             }
@@ -39,7 +38,7 @@ pipeline {
         stage('Deploy to Minikube') {
             steps {
                 sh '''
-                echo "Applying K8s manifest to Minikube..."
+                cd ~/mlops-mini
                 kubectl apply -f k8s-deploy.yml
                 kubectl get pods
                 '''
@@ -49,11 +48,10 @@ pipeline {
 
     post {
         success {
-            echo '✅ Pipeline executed successfully!'
+            echo '✅ Pipeline completed successfully!'
         }
         failure {
             echo '❌ Pipeline failed!'
         }
     }
 }
-
