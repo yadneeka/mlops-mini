@@ -5,12 +5,16 @@ pipeline {
         MLFLOW_TRACKING_URI = "http://127.0.0.1:5000"
     }
 
-    stages {
-        stage('Checkout Code') {
-            steps {
-                git branch: 'main', url: 'https://github.com/yadneeka/mlops-mini.git'
-            }
-        }
+    stage('Checkout Code') {
+    steps {
+        git branch: 'main',
+            url: 'https://github.com/yadneeka/mlops-mini.git',
+            changelog: false,
+            poll: false,
+            gitTool: 'linux-git'
+    }
+}
+
 
         stage('Setup Python Env') {
             steps {
